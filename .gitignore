@@ -1,0 +1,70 @@
+####################################
+# COMMON
+####################################
+.DS_Store
+Thumbs.db
+.env
+.env.*
+*.log
+
+####################################
+# NODEJS BACKEND (be/)
+####################################
+be/node_modules/
+be/npm-debug.log*
+be/yarn-debug.log*
+be/yarn-error.log*
+
+# Environment
+be/.env
+be/.env.*
+
+# Build output
+be/dist/
+be/build/
+
+####################################
+# REACT NATIVE FRONTEND (fe/)
+####################################
+# Node modules
+fe/node_modules/
+
+# Metro / React Native
+fe/.expo/
+fe/.metro-health-check*
+
+# Logs
+fe/npm-debug.log*
+fe/yarn-debug.log*
+fe/yarn-error.log*
+
+####################################
+# ANDROID (React Native)
+####################################
+fe/android/.gradle/
+fe/android/build/
+fe/android/app/build/
+fe/android/local.properties
+fe/android/key.properties
+*.jks
+*.keystore
+
+####################################
+# IOS (React Native)
+####################################
+fe/ios/Pods/
+fe/ios/build/
+fe/ios/.symlinks/
+fe/ios/DerivedData/
+fe/ios/Flutter/
+
+####################################
+# IDE
+####################################
+.vscode/
+.idea/
+
+####################################
+# KEEP EMPTY FOLDERS
+####################################
+!.gitkeep
