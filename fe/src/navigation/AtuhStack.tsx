@@ -1,17 +1,16 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { AuthStackParamList } from './AuthStackParamList'
-import LoginPage from '../pages/auth/LoginPage'
-import RegisterPage from '../pages/auth/RegisterPage'
-import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage'
-
+import LoginScreen from '../screens/auth/LoginScreen'
+import RegisterScreen from '../screens/auth/RegisterScreen'
+import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen'
 const Stack = createNativeStackNavigator<AuthStackParamList>()
 
 export default function AuthStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Login" component={LoginPage} />
-      <Stack.Screen name="Register" component={RegisterPage} />
-      <Stack.Screen name="ForgotPassword" component={ForgotPasswordPage} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </Stack.Navigator>
   )
 }

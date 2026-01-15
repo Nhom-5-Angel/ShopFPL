@@ -1,24 +1,36 @@
 import React from 'react'
+import { StatusBar, useColorScheme } from 'react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import RegisterPage from './src/pages/auth/RegisterPage'
-import LoginPage from './src/pages/auth/LoginPage'
-import ForgotPasswordPage from './src/pages/auth/ForgotPasswordPage'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthStackParamList } from './src/navigation/AuthStackParamList'
+import LoginScreen from './src/screens/auth/LoginScreen'
+import RegisterScreen from './src/screens/auth/RegisterScreen'
+import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen'
+
+// import { BottomTabNavigator } from './src/navigation/BottomTabNavigator'
 
 const Stack = createNativeStackNavigator<AuthStackParamList>()
 
 const App = () => {
+  const isDarkMode = useColorScheme() === 'dark'
+
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginPage} />
+    <SafeAreaProvider>
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        </Stack.Navigator>
 
-        <Stack.Screen name="Register" component={RegisterPage} />
-
-        <Stack.Screen name="ForgotPassword" component={ForgotPasswordPage} />
-      </Stack.Navigator>
-    </NavigationContainer>
+        {/*
+        👉 Sau này login xong thì đổi sang:
+        <BottomTabNavigator />
+        */}
+      </NavigationContainer>
+    </SafeAreaProvider>
   )
 }
 
