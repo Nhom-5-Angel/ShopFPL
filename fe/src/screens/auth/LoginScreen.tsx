@@ -7,6 +7,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { AuthStackParamList } from '../../navigation/AuthStackParamList'
 import { useAuth } from '../../hooks/auth/useAuth'
 
+type LoginNaviagtionProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>
+
 const LoginPage = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -15,10 +17,10 @@ const LoginPage = () => {
 
     const [showPassword, setShowPassword] = useState(false)
 
-    type LoginNaviagtionProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>
+
     const navigation = useNavigation<LoginNaviagtionProp>()
 
-    const {handleLogin} = useAuth()
+    const { handleLogin } = useAuth()
     return (
         <SafeAreaView style={styles.container}>
             <View>
@@ -71,22 +73,22 @@ const LoginPage = () => {
                         email,
                         password
                     },
-                    () => navigation.navigate('Home')
+                        () => navigation.navigate('Home')
                     )}>
                     <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Đăng ký</Text>
                 </Pressable>
 
                 <View style={styles.footer}>
-                    <Text style={{fontSize: 15}}>Chưa có tài khoản?</Text>
+                    <Text style={{ fontSize: 15 }}>Chưa có tài khoản?</Text>
                     <Pressable
-                    onPress={() => navigation.navigate('Register')}
-                >
-                    <Text
-                        style={{fontSize: 15, marginLeft: 10, textDecorationLine: 'underline', color: 'blue' }}
+                        onPress={() => navigation.navigate('Register')}
                     >
-                        Đăng ký Ngay
-                    </Text>
-                </Pressable>
+                        <Text
+                            style={{ fontSize: 15, marginLeft: 10, textDecorationLine: 'underline', color: 'blue' }}
+                        >
+                            Đăng ký Ngay
+                        </Text>
+                    </Pressable>
                 </View>
             </View>
         </SafeAreaView>

@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { AuthStackParamList } from '../../navigation/AuthStackParamList'
 import { useAuth } from '../../hooks/auth/useAuth';
 
+type RegisterNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>
 
 const RegisterPage = () => {
   const [fullName, setFullName] = useState('')
@@ -20,10 +21,10 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  type RegisterNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>
+
   const navigation = useNavigation<RegisterNavigationProp>()
 
-  const {handleRegister} = useAuth()
+  const { handleRegister } = useAuth()
   return (
     <SafeAreaView style={styles.container}>
 
@@ -111,7 +112,7 @@ const RegisterPage = () => {
 
         <Pressable
           style={[styles.btnRegister]}
-          onPress={() => 
+          onPress={() =>
             handleRegister(
               {
                 username: fullName,
@@ -127,17 +128,17 @@ const RegisterPage = () => {
         </Pressable>
 
         <View style={styles.footer}>
-                            <Text style={{fontSize: 15}}>Có tài khoản</Text>
-                            <Pressable
-                            onPress={() => navigation.navigate('Login')}
-                        >
-                            <Text
-                                style={{fontSize: 15, marginLeft: 10, textDecorationLine: 'underline', color: 'blue' }}
-                            >
-                                Đăng nhập ngay
-                            </Text>
-                        </Pressable>
-                        </View>
+          <Text style={{ fontSize: 15 }}>Có tài khoản</Text>
+          <Pressable
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Text
+              style={{ fontSize: 15, marginLeft: 10, textDecorationLine: 'underline', color: 'blue' }}
+            >
+              Đăng nhập ngay
+            </Text>
+          </Pressable>
+        </View>
 
       </View>
     </SafeAreaView>
@@ -194,8 +195,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   footer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginTop: 30,
-    }
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 30,
+  }
 })

@@ -2,9 +2,12 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import User from '../models/user.model.js';
 import dotenv from 'dotenv'
+import transporter from '../configs/mailer.js'
 
+const otpStore = new Map()
 dotenv.config()
 
+//Đăng ký
 export const signUp = async (req, res) => {
     try {
         // Lấy dữ liệu từ request body
@@ -50,7 +53,7 @@ export const signUp = async (req, res) => {
     }
 }
 
-
+//Đăng nhập 
 export const signIn = async (req, res) => {
     try {
         const { email, password } = req.body
@@ -88,7 +91,7 @@ export const signIn = async (req, res) => {
         return res.status(500).json({ message: "Lỗi hệ thống" })
     }
 }
-
+//làm mới token
 export const refreshToken = async (req, res) => {
     try {
         const { refreshToken } = req.body
@@ -126,3 +129,84 @@ export const refreshToken = async (req, res) => {
         return res.status(500).json({ message: 'Lỗi hệ thống' })
     }
 }
+
+// Quên mật khẩu - gửi OTP
+export const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email không được để trống' })
+        }
+
+        const user = await User.findOne({ email })
+        if (!user) {
+            return res.status(404).json({ message: 'Email không tồn tại' })
+        }
+
+        // Tạo OTP 6 số
+        const otp = Math.floor(100000 + Math.random() * 900000).toString()
+
+        otpStore.set(email, {
+            otp,
+            expiresAt: Date.now() + 5 * 60 * 1000, // 5 phút
+        })
+
+        await transporter.sendMail({
+            from: `"Support" <${process.env.MAIL_USER}>`,
+            to: email,
+            subject: 'Mã xác nhận đổi mật khẩu',
+            html: `
+                <h2>Yêu cầu đổi mật khẩu</h2>
+                <p>Mã OTP của bạn là:</p>
+                <h1 style="color:red">${otp}</h1>
+                <p>Mã có hiệu lực trong 5 phút</p>
+            `,
+        })
+
+        return res.status(200).json({ message: 'Đã gửi mã xác nhận qua email' })
+    } catch (error) {
+        console.error('Forgot password error:', error.message)
+        return res.status(500).json({ message: 'Lỗi hệ thống' })
+    }
+}
+
+// Đặt lại mật khẩu
+export const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body
+
+        if (!email || !otp || !newPassword) {
+            return res.status(400).json({ message: 'Thiếu thông tin' })
+        }
+
+        const record = otpStore.get(email)
+        if (!record) {
+            return res.status(400).json({ message: 'OTP không tồn tại' })
+        }
+
+        if (Date.now() > record.expiresAt) {
+            otpStore.delete(email)
+            return res.status(400).json({ message: 'OTP đã hết hạn' })
+        }
+
+        if (record.otp !== otp) {
+            return res.status(400).json({ message: 'OTP không đúng' })
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+        await User.findOneAndUpdate(
+            { email },
+            { password: hashedPassword }
+        )
+
+        otpStore.delete(email)
+
+        return res.status(200).json({ message: 'Đổi mật khẩu thành công' })
+    } catch (error) {
+        console.error('Reset password error:', error.message)
+        return res.status(500).json({ message: 'Lỗi hệ thống' })
+    }
+}
+
