@@ -5,7 +5,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { AuthStackParamList } from '../../navigation/AuthStackParamList'
-
+import { useAuth } from '../../hooks/auth/useAuth';
 
 
 const RegisterPage = () => {
@@ -22,6 +22,8 @@ const RegisterPage = () => {
 
   type RegisterNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>
   const navigation = useNavigation<RegisterNavigationProp>()
+
+  const {handleRegister} = useAuth()
   return (
     <SafeAreaView style={styles.container}>
 
@@ -109,7 +111,18 @@ const RegisterPage = () => {
 
         <Pressable
           style={[styles.btnRegister]}
-          onPress={() => { }}>
+          onPress={() => 
+            handleRegister(
+              {
+                username: fullName,
+                email,
+                phoneNumber: phone,
+                password,
+                confirmPassword
+              },
+              () => navigation.navigate('Login')
+            )
+          }>
           <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Đăng ký</Text>
         </Pressable>
 

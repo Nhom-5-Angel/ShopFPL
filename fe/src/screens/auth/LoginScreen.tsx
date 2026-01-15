@@ -5,6 +5,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { AuthStackParamList } from '../../navigation/AuthStackParamList'
+import { useAuth } from '../../hooks/auth/useAuth'
 
 const LoginPage = () => {
     const [email, setEmail] = useState('')
@@ -16,6 +17,8 @@ const LoginPage = () => {
 
     type LoginNaviagtionProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>
     const navigation = useNavigation<LoginNaviagtionProp>()
+
+    const {handleLogin} = useAuth()
     return (
         <SafeAreaView style={styles.container}>
             <View>
@@ -64,7 +67,12 @@ const LoginPage = () => {
 
                 <Pressable
                     style={[styles.btnLogin]}
-                    onPress={() => {}}>
+                    onPress={() => handleLogin({
+                        email,
+                        password
+                    },
+                    () => navigation.navigate('Home')
+                    )}>
                     <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Đăng ký</Text>
                 </Pressable>
 
