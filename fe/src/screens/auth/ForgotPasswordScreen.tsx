@@ -6,12 +6,12 @@ import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { AuthStackParamList } from '../../navigation/AuthStackParamList'
 
-type RegisterNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>
+type ForgotNavigatorProp = NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>
 
 const ForgotPasswordPage = () => {
 
 
-  const navigation = useNavigation<RegisterNavigationProp>()
+  const navigation = useNavigation<ForgotNavigatorProp>()
   const [focusInput, setFocusInput] = useState<String | null>(null)
   const [email, setEmail] = useState('')
   return (
@@ -46,7 +46,8 @@ const ForgotPasswordPage = () => {
       </View>
 
       <Pressable
-      style={styles.btnSendOTP}>
+      style={styles.btnSendOTP}
+      onPress={() => navigation.navigate('VerifyOTP', {email})}>
         <Text style={{fontSize: 15, color: 'white'}}>Gửi Mã OTP</Text>
       </Pressable>
     </SafeAreaView>
