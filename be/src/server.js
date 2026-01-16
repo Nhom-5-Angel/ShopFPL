@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './configs/db.js';
 import authRoute from './routes/authRoute.js';
+import userRoute from './routes/userRoute.js';
+import adminRoute from './routes/adminRoute.js';
 
 const app = express();
 /**
@@ -18,7 +20,15 @@ dotenv.config();
 app.use(cors());
 app.use(express.json());
 
+// Routes
 app.use('/api/auth', authRoute);
+app.use('/api/users', userRoute);
+app.use('/api/admin', adminRoute);
+
+// Health check
+app.get('/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
 
 connectDB().then(() => {
     app.listen(PORT, () => {
