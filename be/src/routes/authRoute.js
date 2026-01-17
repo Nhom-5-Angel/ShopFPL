@@ -1,5 +1,5 @@
 import express from 'express'
-import { forgotPassword, refreshToken, resetPassword, signIn, signUp } from '../controllers/auth.controller.js'
+import { forgotPassword, refreshToken, resetPassword, signIn, signUp, verifyOtp } from '../controllers/auth.controller.js'
 import { authenticateToken } from '../middlewares/auth.middleware.js'
 
 const router = express.Router()
@@ -8,6 +8,7 @@ const router = express.Router()
 router.post('/signup', signUp)
 router.post('/signin', signIn)
 router.post('/forgotpassword', forgotPassword)
+router.post('/verifyotp', verifyOtp)
 router.post('/resetpassword', resetPassword)
 router.post('/refreshtoken', refreshToken)
 

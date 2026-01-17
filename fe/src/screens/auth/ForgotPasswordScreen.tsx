@@ -5,6 +5,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { AuthStackParamList } from '../../navigation/AuthStackParamList'
+import { useAuth } from '../../hooks/auth/useAuth'
 
 type ForgotNavigatorProp = NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>
 
@@ -14,6 +15,7 @@ const ForgotPasswordPage = () => {
   const navigation = useNavigation<ForgotNavigatorProp>()
   const [focusInput, setFocusInput] = useState<String | null>(null)
   const [email, setEmail] = useState('')
+  const {handleForgotPassword} = useAuth()
   return (
     <SafeAreaView style={styles.container}>
 
@@ -47,7 +49,7 @@ const ForgotPasswordPage = () => {
 
       <Pressable
       style={styles.btnSendOTP}
-      onPress={() => navigation.navigate('VerifyOTP', {email})}>
+      onPress={() => handleForgotPassword({email}, () => navigation.navigate('VerifyOTP', {email}))}>
         <Text style={{fontSize: 15, color: 'white'}}>Gửi Mã OTP</Text>
       </Pressable>
     </SafeAreaView>

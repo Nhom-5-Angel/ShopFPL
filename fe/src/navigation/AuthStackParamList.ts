@@ -5,5 +5,8 @@ export type AuthStackParamList = {
   VerifyOTP: {
     email: string
   }
+  ChangePassword: {
+    email: string
+  }
   Home: undefined
 }

@@ -5,6 +5,8 @@ import dotenv from 'dotenv'
 import transporter from '../configs/mailer.js'
 
 const otpStore = new Map()
+
+
 dotenv.config()
 
 //Đăng ký
@@ -114,9 +116,9 @@ export const refreshToken = async (req, res) => {
                 }
 
                 const newAccessToken = jwt.sign(
-                    { userId: decoded.userId },
-                    process.env.ACCESS_TOKEN_SECRET,
-                    { expiresIn: '15m' }
+                    { userId: user._id },
+                    process.env.REFRESH_TOKEN_SECRET,
+                    { expiresIn: '7d' }
                 )
 
                 return res.status(200).json({
@@ -171,12 +173,12 @@ export const forgotPassword = async (req, res) => {
     }
 }
 
-// Đặt lại mật khẩu
-export const resetPassword = async (req, res) => {
+//VerifyOTP
+export const verifyOtp = async (req, res) => {
     try {
-        const { email, otp, newPassword } = req.body
+        const { email, otp } = req.body
 
-        if (!email || !otp || !newPassword) {
+        if (!email || !otp) {
             return res.status(400).json({ message: 'Thiếu thông tin' })
         }
 
@@ -194,6 +196,37 @@ export const resetPassword = async (req, res) => {
             return res.status(400).json({ message: 'OTP không đúng' })
         }
 
+        // Đánh dấu OTP đã verify
+        otpStore.set(email, {
+            ...record,
+            verified: true
+        })
+
+        return res.status(200).json({
+            message: 'Xác thực OTP thành công'
+        })
+    } catch (error) {
+        console.error('Verify OTP error:', error.message)
+        return res.status(500).json({ message: 'Lỗi hệ thống' })
+    }
+}
+
+
+
+// Đặt lại mật khẩu
+export const resetPassword = async (req, res) => {
+    try {
+        const { email, newPassword } = req.body
+
+        if (!email || !newPassword) {
+            return res.status(400).json({ message: 'Thiếu thông tin' })
+        }
+
+        const record = otpStore.get(email)
+        if (!record || !record.verified) {
+            return res.status(400).json({ message: 'OTP chưa được xác thực' })
+        }
+
         const hashedPassword = await bcrypt.hash(newPassword, 10)
 
         await User.findOneAndUpdate(
@@ -206,6 +239,8 @@ export const resetPassword = async (req, res) => {
         return res.status(200).json({ message: 'Đổi mật khẩu thành công' })
     } catch (error) {
         console.error('Reset password error:', error.message)
+        console.log('OTP STORE:', otpStore)
+console.log('EMAIL:', email)
         return res.status(500).json({ message: 'Lỗi hệ thống' })
     }
 }

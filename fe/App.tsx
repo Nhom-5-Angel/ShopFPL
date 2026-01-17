@@ -10,6 +10,7 @@ import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen'
 import { HomeScreen } from './src/screens/HomeScreen'
 import { HomeStackParamList } from './src/navigation/HomeStackParamList'
 import VerifyOTPScreen from './src/screens/auth/VerifyOTPScreen'
+import ChangePasswordScreen from './src/screens/auth/ChangePasswordScreen'
 // import { BottomTabNavigator } from './src/navigation/BottomTabNavigator'
 
 const Stack = createNativeStackNavigator<AuthStackParamList>()
@@ -26,6 +27,7 @@ const App = () => {
           <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
           <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
+          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />
         </Stack.Navigator>
 
