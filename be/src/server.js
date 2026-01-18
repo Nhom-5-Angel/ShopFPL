@@ -5,6 +5,8 @@ import connectDB from './configs/db.js';
 import authRoute from './routes/authRoute.js';
 import userRoute from './routes/userRoute.js';
 import adminRoute from './routes/adminRoute.js';
+import productRoute from './routes/productRoute.js';
+import categoryRoute from './routes/categoryRoute.js';
 
 const app = express();
 /**
@@ -24,6 +26,8 @@ app.use(express.json());
 app.use('/api/auth', authRoute);
 app.use('/api/users', userRoute);
 app.use('/api/admin', adminRoute);
+app.use('/api/products', productRoute);
+app.use('/api/categories', categoryRoute);
 
 // Health check
 app.get('/health', (req, res) => {
