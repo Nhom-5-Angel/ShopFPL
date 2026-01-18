@@ -64,16 +64,19 @@ class ApiService {
 
   // Products
   async getProducts(): Promise<Product[]> {
-    return this.request<Product[]>(API_ENDPOINTS.PRODUCTS);
+    const response = await this.request<{ success: boolean; data: Product[] }>(API_ENDPOINTS.PRODUCTS);
+    return response.data || [];
   }
 
   async getProduct(id: string): Promise<Product> {
-    return this.request<Product>(API_ENDPOINTS.PRODUCT_DETAIL(id));
+    const response = await this.request<{ success: boolean; data: Product }>(API_ENDPOINTS.PRODUCT_DETAIL(id));
+    return response.data;
   }
 
   // Categories
   async getCategories(): Promise<Category[]> {
-    return this.request<Category[]>(API_ENDPOINTS.CATEGORIES);
+    const response = await this.request<{ success: boolean; data: Category[] }>(API_ENDPOINTS.CATEGORIES);
+    return response.data || [];
   }
 
   // Cart

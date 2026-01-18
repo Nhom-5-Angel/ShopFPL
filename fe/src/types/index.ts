@@ -13,13 +13,24 @@ export interface Category {
   description?: string;
 }
 
+export interface ProductImage {
+  url: string;
+  publicId?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
   description?: string;
   price: number;
-  categoryId: string;
+  categoryId: string | { _id: string; name: string };
   isActive: boolean;
+  images?: ProductImage[];
+  stock?: number;
+  discount?: number;
+  sold?: number;
+  rating?: number;
+  reviewsCount?: number;
 }
 
 export interface CartItem {
