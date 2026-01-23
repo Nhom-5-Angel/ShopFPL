@@ -1,10 +1,21 @@
 // Types for the application
 
 export interface User {
-  id: string;
+  _id: string;
+  id?: string; // Alias for _id
+  username: string;
   email: string;
-  name: string;
+  phoneNumber?: string;
+  avatarUrl?: string;
+  avatarId?: string;
+  birthDate?: string;
+  address?: string;
+  gender?: 'male' | 'female' | 'other';
   role: 'user' | 'admin';
+  createdAt?: string;
+  updatedAt?: string;
+  // Helper getter
+  name?: string; // Alias for username
 }
 
 export interface Category {

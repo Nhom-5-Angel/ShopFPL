@@ -1,8 +1,42 @@
-import { Alert } from "react-native";
-import { changePassword, forgotPasword, login, register, verifyOtp } from "../../services/auth/auth.service";
+/**
+ * useAuth Hook
+ * Custom hook for authentication operations with validation and error handling
+ */
+
+import { useState } from 'react';
+import { Alert } from 'react-native';
+import {
+  register,
+  login,
+  forgotPassword,
+  verifyOtp,
+  resetPassword,
+  RegisterPayload,
+  LoginPayload,
+  ForgotPasswordPayload,
+  VerifyOtpPayload,
+  ResetPasswordPayload,
+} from '../../services/auth/auth.service';
+import { useAuthContext } from '../../contexts/AuthContext';
+import {
+  validateEmail,
+  validatePassword,
+  validatePasswordConfirmation,
+  validatePhone,
+  validateOTP,
+  validateFullName,
+} from '../../utils/validation';
+import { handleApiError } from '../../services/api/errorHandler';
+import { SUCCESS_MESSAGES } from '../../constants';
+import { User } from '../../types';
 
 export const useAuth = () => {
+  const { login: loginContext } = useAuthContext();
+  const [isLoading, setIsLoading] = useState(false);
 
+  /**
+   * Register a new user
+   */
   const handleRegister = async (
     data: {
       username: string;
@@ -11,197 +45,264 @@ export const useAuth = () => {
       password: string;
       confirmPassword: string;
     },
-    onSuccess: () => void
+    onSuccess?: () => void
   ) => {
-
-    if (!data.username || !data.email || !data.phoneNumber || !data.password || !data.confirmPassword) {
-      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
+    // Validation
+    const nameValidation = validateFullName(data.username);
+    if (!nameValidation.isValid) {
+      Alert.alert('Lỗi', nameValidation.error);
       return;
     }
 
-    if (data.password.length < 8) {
-      Alert.alert('Lỗi', 'Mật khẩu phải trên 8 ký tự');
+    const emailValidation = validateEmail(data.email);
+    if (!emailValidation.isValid) {
+      Alert.alert('Lỗi', emailValidation.error);
       return;
     }
 
-    if (data.password !== data.confirmPassword) {
-      Alert.alert('Lỗi', 'Mật khẩu không trùng khớp');
+    const phoneValidation = validatePhone(data.phoneNumber);
+    if (!phoneValidation.isValid) {
+      Alert.alert('Lỗi', phoneValidation.error);
       return;
     }
 
+    const passwordValidation = validatePassword(data.password);
+    if (!passwordValidation.isValid) {
+      Alert.alert('Lỗi', passwordValidation.error);
+      return;
+    }
+
+    const confirmPasswordValidation = validatePasswordConfirmation(
+      data.password,
+      data.confirmPassword
+    );
+    if (!confirmPasswordValidation.isValid) {
+      Alert.alert('Lỗi', confirmPasswordValidation.error);
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      await register({
+      const payload: RegisterPayload = {
         username: data.username,
         email: data.email,
         phoneNumber: data.phoneNumber,
         password: data.password,
-      });
+      };
 
-      Alert.alert('Thành công', 'Đăng ký thành công');
-      onSuccess();
+      const response = await register(payload);
 
-    } catch (error: any) {
-      console.log('REGISTER ERROR:', error);
+      if (response.success && response.data) {
+        // Save user data and token
+        const userData: User = {
+          _id: response.data.user.id,
+          id: response.data.user.id,
+          username: response.data.user.username,
+          email: response.data.user.email,
+          phoneNumber: response.data.user.phoneNumber,
+          role: 'user',
+        };
+        await loginContext(userData, response.data.accessToken);
 
-      Alert.alert(
-        'Thất bại',
-        error?.response?.data?.message || error?.message || 'Lỗi hệ thống'
-      );
+        Alert.alert('Thành công', SUCCESS_MESSAGES.REGISTER_SUCCESS);
+        onSuccess?.();
+      }
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      Alert.alert('Thất bại', errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  /**
+   * Login user
+   */
   const handleLogin = async (
+    data: LoginPayload,
+    onSuccess?: () => void
+  ) => {
+    // Validation
+    const emailValidation = validateEmail(data.email);
+    if (!emailValidation.isValid) {
+      Alert.alert('Lỗi', emailValidation.error);
+      return;
+    }
+
+    const passwordValidation = validatePassword(data.password);
+    if (!passwordValidation.isValid) {
+      Alert.alert('Lỗi', passwordValidation.error);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await login(data);
+
+      if (response.success && response.data) {
+        // Save user data and token
+        const userData: User = {
+          _id: response.data.user.id,
+          id: response.data.user.id,
+          username: response.data.user.username,
+          email: response.data.user.email,
+          phoneNumber: response.data.user.phoneNumber,
+          role: 'user',
+        };
+        await loginContext(userData, response.data.accessToken);
+
+        Alert.alert('Thành công', SUCCESS_MESSAGES.LOGIN_SUCCESS);
+        onSuccess?.();
+      }
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      Alert.alert('Thất bại', errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Request password reset (send OTP)
+   */
+  const handleForgotPassword = async (
+    data: ForgotPasswordPayload,
+    onSuccess?: () => void
+  ) => {
+    const emailValidation = validateEmail(data.email);
+    if (!emailValidation.isValid) {
+      Alert.alert('Lỗi', emailValidation.error);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await forgotPassword(data);
+
+      if (response.success) {
+        Alert.alert('Thành công', SUCCESS_MESSAGES.FORGOT_PASSWORD_SUCCESS);
+        onSuccess?.();
+      }
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      Alert.alert('Thất bại', errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Resend OTP for password reset
+   */
+  const handleResendForgotPassword = async (
+    data: ForgotPasswordPayload,
+    onSuccess?: () => void
+  ) => {
+    const emailValidation = validateEmail(data.email);
+    if (!emailValidation.isValid) {
+      Alert.alert('Lỗi', emailValidation.error);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await forgotPassword(data);
+
+      if (response.success) {
+        Alert.alert('Thành công', 'Mã xác nhận đã được gửi lại về email của bạn');
+        onSuccess?.();
+      }
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      Alert.alert('Thất bại', errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Verify OTP
+   */
+  const handleVerifyOtp = async (
+    data: VerifyOtpPayload,
+    onSuccess?: () => void
+  ) => {
+    const otpValidation = validateOTP(data.otp);
+    if (!otpValidation.isValid) {
+      Alert.alert('Lỗi', otpValidation.error);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await verifyOtp(data);
+
+      if (response.success) {
+        Alert.alert('Thành công', SUCCESS_MESSAGES.VERIFY_OTP_SUCCESS);
+        onSuccess?.();
+      }
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      Alert.alert('Thất bại', errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Change password after OTP verification
+   */
+  const handleChangePassword = async (
     data: {
       email: string;
-      password: string;
+      newPassword: string;
+      confirmPassword: string;
     },
-    onSuccess: () => void
+    onSuccess?: () => void
   ) => {
-
-    if (!data.email || !data.password) {
-      Alert.alert('Lỗi', 'Không được để trống');
+    const passwordValidation = validatePassword(data.newPassword);
+    if (!passwordValidation.isValid) {
+      Alert.alert('Lỗi', passwordValidation.error);
       return;
     }
 
-    if (data.password.length < 8) {
-      Alert.alert('Lỗi', 'Mật khẩu phải trên 8 ký tự');
+    const confirmPasswordValidation = validatePasswordConfirmation(
+      data.newPassword,
+      data.confirmPassword
+    );
+    if (!confirmPasswordValidation.isValid) {
+      Alert.alert('Lỗi', confirmPasswordValidation.error);
       return;
     }
 
+    setIsLoading(true);
     try {
-      await login(data);
+      const payload: ResetPasswordPayload = {
+        email: data.email,
+        newPassword: data.newPassword,
+      };
 
-      Alert.alert('Thành công', 'Đăng nhập thành công');
-      onSuccess();
+      const response = await resetPassword(payload);
 
-    } catch (error: any) {
-      console.log('LOGIN ERROR:', error);
-
-      Alert.alert(
-        'Thất bại',
-        error?.response?.data?.message || error?.message || 'Lỗi hệ thống'
-      );
+      if (response.success) {
+        Alert.alert('Thành công', SUCCESS_MESSAGES.CHANGE_PASSWORD_SUCCESS);
+        onSuccess?.();
+      }
+    } catch (error) {
+      const errorMessage = handleApiError(error);
+      Alert.alert('Thất bại', errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleForgotPassword = async (
-    data: {
-      email: string
-    }, onSuccess: () => void
-  ) => {
-    if (!data.email) {
-      Alert.alert('Lỗi', 'Vui lòng nhập địa chỉ email của bạn')
-      return
-    }
-
-    try {
-      await forgotPasword(data)
-      Alert.alert('Thành cồng', 'Mã xác nhận đã được gửi về email của bạn')
-      onSuccess()
-    } catch (error: any) {
-      console.log('FORGOTPASSWORD ERROR:', error);
-
-      Alert.alert(
-        'Thất bại',
-        error?.response?.data?.message || error?.message || 'Lỗi hệ thống'
-      );
-    }
-  }
-
-  const handleResendForgotPassword = async (
-    data: {
-      email: string
-    }, onSuccess: () => void
-  ) => {
-    if (!data.email) {
-      Alert.alert('Lỗi', 'Vui lòng nhập địa chỉ email của bạn')
-      return
-    }
-
-    try {
-      await forgotPasword(data)
-      Alert.alert('Thành cồng', 'Mã xác nhận đã được gửi lại về email của bạn')
-      onSuccess()
-    } catch (error: any) {
-      console.log('FORGOTPASSWORD ERROR:', error);
-
-      Alert.alert(
-        'Thất bại',
-        error?.response?.data?.message || error?.message || 'Lỗi hệ thống'
-      );
-    }
-  }
-
-  const handleVerifyOtp = async(
-    data: {
-      email: string
-      otp: string
-    }, onSuccess: () => void
-  ) => {
-    if(!data.otp) {
-      Alert.alert('Lỗi', 'Chưa nhập mã xác nhận')
-      return
-    }
-    if (data.otp.length !== 6) {
-      Alert.alert('Lỗi', 'Mã OTP phải đủ 6 số')
-      return
-    }
-
-    try {
-      await verifyOtp(data)
-      Alert.alert('Thành công', 'Mã xác nhận chính xác')
-      onSuccess()
-    } catch (error: any) {
-      console.log('VERIFYOTP ERROR', error);
-      Alert.alert('Thất bại', error?.response?.data?.message || error?.message || 'Lỗi hệ thống' )
-    }
-  }
-
-  const hanldeChangePassword = async(
-    data: {
-      email: string,
-      newPassword: string,
-      confirmPassword: string
-    }, onSuccess: () => void 
-  ) => {
-    if (!data.newPassword || !data.confirmPassword) {
-    Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ mật khẩu')
-    return
-  }
-
-  if (data.newPassword.length < 8) {
-    Alert.alert('Lỗi', 'Mật khẩu phải ít nhất 8 ký tự')
-    return
-  }
-
-  if (data.newPassword !== data.confirmPassword) {
-    Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp')
-    return
-  }
-  try {
-    await changePassword({
-      email: data.email,
-      newPassword: data.newPassword
-    })
-
-    Alert.alert('Thành công', 'Đổi mật khẩu thành công')
-    onSuccess()
-  } catch (error: any) {
-    console.log('RESETPASSWORD ERROR:', error)
-
-    Alert.alert(
-      'Thất bại',
-      error?.response?.data?.message || 'Lỗi hệ thống'
-    )
-  }
-  }
-
   return {
+    isLoading,
     handleRegister,
     handleLogin,
     handleForgotPassword,
     handleResendForgotPassword,
     handleVerifyOtp,
-    hanldeChangePassword
+    handleChangePassword,
   };
 };

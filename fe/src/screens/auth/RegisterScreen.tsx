@@ -1,202 +1,257 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
-import React, { useState } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Ionicons from 'react-native-vector-icons/Ionicons'
-import { useNavigation } from '@react-navigation/native'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { AuthStackParamList } from '../../navigation/AuthStackParamList'
+/**
+ * Register Screen
+ * User registration screen
+ */
+
+import React, { useState } from 'react';
+import { View, StyleSheet, Pressable, Text, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { AuthStackParamList } from '../../navigation/types';
 import { useAuth } from '../../hooks/auth/useAuth';
+import { Button, Input } from '../../components/common';
+import { colors, typography, spacing } from '../../theme';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-type RegisterNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>
+type RegisterNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
-const RegisterPage = () => {
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+const RegisterScreen: React.FC = () => {
+  const navigation = useNavigation<RegisterNavigationProp>();
+  const { handleRegister, isLoading } = useAuth();
 
-  const [focusInput, setFocusInput] = useState<String | null>(null)
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+  });
 
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [errors, setErrors] = useState<{
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({});
 
+  const updateField = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
 
-  const navigation = useNavigation<RegisterNavigationProp>()
+  const handleSubmit = async () => {
+    // Clear previous errors
+    setErrors({});
 
-  const { handleRegister } = useAuth()
+    // Basic validation
+    const newErrors: typeof errors = {};
+
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = 'Họ và tên không được để trống';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email không được để trống';
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Số điện thoại không được để trống';
+    }
+
+    if (!formData.password.trim()) {
+      newErrors.password = 'Mật khẩu không được để trống';
+    }
+
+    if (!formData.confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Xác nhận mật khẩu không được để trống';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    handleRegister(
+      {
+        username: formData.fullName,
+        email: formData.email,
+        phoneNumber: formData.phone,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      },
+      () => {
+        navigation.navigate('Login');
+      }
+    );
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <SafeAreaView style={styles.container}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.header}>
+            <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
+              <Text style={styles.backText}>Quay lại</Text>
+            </Pressable>
+          </View>
 
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <Ionicons name='arrow-back' size={25} color={'black'} />
-        </Pressable>
-        <Text style={{ marginLeft: 10, fontSize: 20 }}>Quay lại</Text>
-      </View>
+          <View style={styles.content}>
+            <View style={styles.titleSection}>
+              <Text style={styles.title}>Đăng Ký</Text>
+              <Text style={styles.subtitle}>
+                Tạo tài khoản mới để bắt đầu mua sắm
+              </Text>
+            </View>
 
-      <View>
-        <Text style={{ fontWeight: 'bold', fontSize: 30, marginTop: 25 }}>Đăng Ký</Text>
-        <Text style={{ marginTop: 10, fontSize: 18 }}>Tạo tài khoản mới để bắt đầu mua sắm</Text>
+            <View style={styles.form}>
+              <Input
+                label="Họ và tên"
+                placeholder="Nguyễn Văn A"
+                value={formData.fullName}
+                onChangeText={(value) => updateField('fullName', value)}
+                error={errors.fullName}
+                leftIcon="person-outline"
+              />
 
-        <Text style={{ marginTop: 30, fontSize: 20 }}>Họ và tên</Text>
-        <TextInput
-          style={[styles.input, focusInput === 'fullname' && styles.inputFocus]}
-          placeholder='Nguyễn Văn A'
-          value={fullName}
-          onChangeText={setFullName}
-          onFocus={() => setFocusInput('fullname')}
-          onBlur={() => setFocusInput(null)}
-          underlineColorAndroid="transparent"
-        />
+              <Input
+                label="Email"
+                placeholder="example@gmail.com"
+                value={formData.email}
+                onChangeText={(value) => updateField('email', value)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                error={errors.email}
+                leftIcon="mail-outline"
+              />
 
-        <Text style={{ marginTop: 20, fontSize: 20 }}>Email</Text>
-        <TextInput
-          style={[styles.input, focusInput === 'email' && styles.inputFocus]}
-          placeholder='example@gmail.com'
-          value={email}
-          onChangeText={setEmail}
-          onFocus={() => setFocusInput('email')}
-          onBlur={() => setFocusInput(null)}
-          underlineColorAndroid="transparent"
-        />
+              <Input
+                label="Số điện thoại"
+                placeholder="0123456789"
+                value={formData.phone}
+                onChangeText={(value) => updateField('phone', value)}
+                keyboardType="phone-pad"
+                error={errors.phone}
+                leftIcon="call-outline"
+              />
 
-        <Text style={{ marginTop: 20, fontSize: 20 }}>Số điện thoại</Text>
-        <TextInput
-          style={[styles.input, focusInput === 'phone' && styles.inputFocus]}
-          placeholder='012345678'
-          value={phone}
-          onChangeText={setPhone}
-          onFocus={() => setFocusInput('phone')}
-          onBlur={() => setFocusInput(null)}
-          underlineColorAndroid="transparent"
-        />
+              <Input
+                label="Mật khẩu"
+                placeholder="Tối thiểu 8 ký tự"
+                value={formData.password}
+                onChangeText={(value) => updateField('password', value)}
+                secureTextEntry
+                autoCapitalize="none"
+                error={errors.password}
+                leftIcon="lock-closed-outline"
+              />
 
-        <Text style={{ marginTop: 20, fontSize: 20 }}>Mật khẩu</Text>
-        <View style={[styles.passwordContainer, focusInput === 'password' && styles.inputFocus]}>
-          <TextInput
-            style={[styles.passwordInput]}
-            placeholder='Tối thiểu 8 ký tự'
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-            onFocus={() => setFocusInput('password')}
-            onBlur={() => setFocusInput(null)}
-            underlineColorAndroid="transparent"
-          />
+              <Input
+                label="Xác nhận mật khẩu"
+                placeholder="Nhập lại mật khẩu"
+                value={formData.confirmPassword}
+                onChangeText={(value) => updateField('confirmPassword', value)}
+                secureTextEntry
+                autoCapitalize="none"
+                error={errors.confirmPassword}
+                leftIcon="lock-closed-outline"
+              />
 
-          <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-            size={22}
-            color={'#888'}
-            onPress={() => setShowPassword(!showPassword)} />
-        </View>
+              <Button
+                title="Đăng ký"
+                onPress={handleSubmit}
+                loading={isLoading}
+                fullWidth
+                style={styles.submitButton}
+              />
 
-        <Text style={{ marginTop: 20, fontSize: 20 }}>Xác nhận mật khẩu</Text>
-        <View style={[styles.passwordContainer, focusInput === 'confirmPassword' && styles.inputFocus]}>
-          <TextInput
-            style={[styles.passwordInput]}
-            placeholder='Tối thiểu 8 ký tự'
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry={!showConfirmPassword}
-            onFocus={() => setFocusInput('confirmPassword')}
-            onBlur={() => setFocusInput(null)}
-            underlineColorAndroid="transparent"
-          />
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Đã có tài khoản?</Text>
+                <Pressable onPress={() => navigation.navigate('Login')}>
+                  <Text style={styles.footerLink}>Đăng nhập ngay</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
+  );
+};
 
-          <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
-            size={22}
-            color={'#888'}
-            onPress={() => setShowConfirmPassword(!showConfirmPassword)} />
-        </View>
-
-        <Pressable
-          style={[styles.btnRegister]}
-          onPress={() =>
-            handleRegister(
-              {
-                username: fullName,
-                email,
-                phoneNumber: phone,
-                password,
-                confirmPassword
-              },
-              () => navigation.navigate('Login')
-            )
-          }>
-          <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Đăng ký</Text>
-        </Pressable>
-
-        <View style={styles.footer}>
-          <Text style={{ fontSize: 15 }}>Có tài khoản</Text>
-          <Pressable
-            onPress={() => navigation.navigate('Login')}
-          >
-            <Text
-              style={{ fontSize: 15, marginLeft: 10, textDecorationLine: 'underline', color: 'blue' }}
-            >
-              Đăng nhập ngay
-            </Text>
-          </Pressable>
-        </View>
-
-      </View>
-    </SafeAreaView>
-  )
-}
-
-export default RegisterPage
+export default RegisterScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: 'white'
+    backgroundColor: colors.background.primary,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center'
+    padding: spacing.base,
   },
-  input: {
-    marginTop: 10,
-    backgroundColor: '#f3f3f5',
-    borderRadius: 10,
-    height: 48,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#f3f3f5',
-    paddingHorizontal: 10
-  },
-  inputFocus: {
-    borderWidth: 2,
-    borderColor: '#4A90E2',
-  },
-  passwordContainer: {
+  backButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f3f3f5',
-    borderRadius: 10,
-    height: 48,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#f3f3f5',
-    paddingHorizontal: 10
   },
-  passwordInput: {
+  backText: {
+    fontSize: typography.fontSize.base,
+    color: colors.text.primary,
+    marginLeft: spacing.sm,
+  },
+  content: {
     flex: 1,
-    fontSize: 16
+    padding: spacing.base,
   },
-  btnRegister: {
-    marginTop: 30,
-    backgroundColor: '#1e2939',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 50,
-    borderRadius: 10,
+  titleSection: {
+    marginTop: spacing.base,
+    marginBottom: spacing['2xl'],
+  },
+  title: {
+    fontSize: typography.fontSize['3xl'],
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
+  },
+  subtitle: {
+    fontSize: typography.fontSize.lg,
+    color: colors.text.secondary,
+  },
+  form: {
+    flex: 1,
+  },
+  submitButton: {
+    marginTop: spacing.lg,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 30,
-  }
-})
+    alignItems: 'center',
+    marginTop: spacing['2xl'],
+  },
+  footerText: {
+    fontSize: typography.fontSize.base,
+    color: colors.text.secondary,
+  },
+  footerLink: {
+    fontSize: typography.fontSize.base,
+    color: colors.primary,
+    marginLeft: spacing.sm,
+    textDecorationLine: 'underline',
+    fontWeight: typography.fontWeight.medium,
+  },
+});

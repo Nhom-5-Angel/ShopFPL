@@ -40,6 +40,14 @@ export const authenticateToken = async (req, res, next) => {
                 });
             }
 
+            // Kiểm tra tài khoản có bị khóa không
+            if (user.isLocked) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ admin.'
+                });
+            }
+
             // Thêm thông tin user vào request
             req.user = user;
             req.userId = decoded.userId;

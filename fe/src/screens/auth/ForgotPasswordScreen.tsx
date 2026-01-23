@@ -1,103 +1,148 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
-import React, { useState } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Ionicons from 'react-native-vector-icons/Ionicons'
-import { useNavigation } from '@react-navigation/native'
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { AuthStackParamList } from '../../navigation/AuthStackParamList'
-import { useAuth } from '../../hooks/auth/useAuth'
+/**
+ * Forgot Password Screen
+ * Screen for requesting password reset OTP
+ */
 
-type ForgotNavigatorProp = NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>
+import React, { useState } from 'react';
+import { View, StyleSheet, Pressable, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { AuthStackParamList } from '../../navigation/types';
+import { useAuth } from '../../hooks/auth/useAuth';
+import { Button, Input } from '../../components/common';
+import { colors, typography, spacing } from '../../theme';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const ForgotPasswordPage = () => {
+type ForgotPasswordNavigationProp = NativeStackNavigationProp<
+  AuthStackParamList,
+  'ForgotPassword'
+>;
 
+const ForgotPasswordScreen: React.FC = () => {
+  const navigation = useNavigation<ForgotPasswordNavigationProp>();
+  const { handleForgotPassword, isLoading } = useAuth();
 
-  const navigation = useNavigation<ForgotNavigatorProp>()
-  const [focusInput, setFocusInput] = useState<String | null>(null)
-  const [email, setEmail] = useState('')
-  const {handleForgotPassword} = useAuth()
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState<string | undefined>();
+
+  const handleSubmit = async () => {
+    setError(undefined);
+
+    if (!email.trim()) {
+      setError('Email không được để trống');
+      return;
+    }
+
+    handleForgotPassword({ email }, () => {
+      navigation.navigate('VerifyOTP', { email });
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
+            <Text style={styles.backText}>Quay lại</Text>
+          </Pressable>
+        </View>
 
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <Ionicons name='arrow-back' size={25} color={'black'} />
-        </Pressable>
-        <Text style={{ marginLeft: 10, fontSize: 20 }}>Quay lại</Text>
+        <View style={styles.titleSection}>
+          <Text style={styles.title}>Quên mật khẩu</Text>
+          <Text style={styles.subtitle}>
+            Đừng lo lắng! Chỉ cần nhập email đã đăng ký và chúng tôi sẽ gửi mã
+            OTP về email của bạn
+          </Text>
+        </View>
+
+        <View style={styles.iconContainer}>
+          <View style={styles.iconCircle}>
+            <Ionicons name="mail-outline" size={50} color={colors.primary} />
+          </View>
+        </View>
+
+        <View style={styles.form}>
+          <Input
+            label="Email"
+            placeholder="example@gmail.com"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            error={error}
+            leftIcon="mail-outline"
+          />
+
+          <Button
+            title="Gửi Mã OTP"
+            onPress={handleSubmit}
+            loading={isLoading}
+            fullWidth
+            style={styles.submitButton}
+          />
+        </View>
       </View>
-
-      <View>
-        <Text style={{ fontWeight: 'bold', fontSize: 30, marginTop: 25 }}>Quên mật khẩu</Text>
-        <Text style={{ fontSize: 15, fontWeight: 'regular', marginTop: 10 }}>Đừng lo lắng! Chỉ cần nhập email đã đăng ký và chúng tôi sẽ gửi mã OTP về email của bạn</Text>
-      </View>
-
-      <View style={styles.circle}>
-        <Ionicons name='mail-outline' size={50} color={'blue'} />
-      </View>
-
-      <View>
-        <Text>Email</Text>
-        <TextInput
-          style={[styles.input, focusInput === 'email' && styles.inputFocus]}
-          placeholder='example@gmail.com'
-          value={email}
-          onChangeText={setEmail}
-          onFocus={() => setFocusInput('email')}
-          onBlur={() => setFocusInput(null)}
-          underlineColorAndroid="transparent" />
-      </View>
-
-      <Pressable
-      style={styles.btnSendOTP}
-      onPress={() => handleForgotPassword({email}, () => navigation.navigate('VerifyOTP', {email}))}>
-        <Text style={{fontSize: 15, color: 'white'}}>Gửi Mã OTP</Text>
-      </Pressable>
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default ForgotPasswordPage
+export default ForgotPasswordScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: 'white'
+    backgroundColor: colors.background.primary,
+  },
+  content: {
+    flex: 1,
+    padding: spacing.base,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center'
+    marginBottom: spacing.base,
   },
-  circle: {
-    backgroundColor: '#eff6ff',
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backText: {
+    fontSize: typography.fontSize.base,
+    color: colors.text.primary,
+    marginLeft: spacing.sm,
+  },
+  titleSection: {
+    marginTop: spacing.base,
+    marginBottom: spacing.xl,
+  },
+  title: {
+    fontSize: typography.fontSize['3xl'],
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
+  },
+  subtitle: {
+    fontSize: typography.fontSize.base,
+    color: colors.text.secondary,
+    lineHeight: typography.lineHeight.relaxed * typography.fontSize.base,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    marginVertical: spacing['3xl'],
+  },
+  iconCircle: {
     width: 150,
     height: 150,
-    borderRadius: 500,
-    alignItems: 'center',
+    borderRadius: 75,
+    backgroundColor: '#EFF6FF',
     justifyContent: 'center',
-    alignSelf: 'center',
-    marginTop: 50
-  },
-  input: {
-    marginTop: 10,
-    backgroundColor: '#f3f3f5',
-    borderRadius: 10,
-    height: 48,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#f3f3f5',
-    paddingHorizontal: 10
-  },
-  inputFocus: {
-    borderWidth: 2,
-    borderColor: '#4A90E2',
-  },
-  btnSendOTP: {
-    marginTop: 30,
-    backgroundColor: '#1e2939',
     alignItems: 'center',
-    justifyContent: 'center',
-    height: 50,
-    borderRadius: 10,
-  }
-})
+  },
+  form: {
+    flex: 1,
+  },
+  submitButton: {
+    marginTop: spacing.lg,
+  },
+});

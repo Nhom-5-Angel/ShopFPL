@@ -61,7 +61,7 @@ export const signIn = async (req, res) => {
         const { email, password } = req.body
 
         if (!email || !password) {
-            return res.status(400).json({ message: "Vui lòng điền đầu đủ thông tin" })
+            return res.status(400).json({ message: "Vui lòng điền đầy đủ thông tin" })
         }
 
         const user = await User.findOne({ email })
@@ -70,9 +70,14 @@ export const signIn = async (req, res) => {
             return res.status(401).json({ message: "email hoặc password không chính xác" })
         }
 
+        // Kiểm tra tài khoản có bị khóa không
+        if (user.isLocked) {
+            return res.status(403).json({ message: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ admin." })
+        }
+
         const checkPassword = await bcrypt.compare(password, user.password)
         if (!checkPassword) {
-            return res.status(401).json({ message: "Password không chính xác" })
+            return res.status(401).json({ message: "email hoặc password không chính xác" })
         }
 
         const accessToken = jwt.sign({ userId: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' })

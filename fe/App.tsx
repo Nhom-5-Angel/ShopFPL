@@ -1,43 +1,63 @@
-import React from 'react'
-import { StatusBar, useColorScheme } from 'react-native'
-import { NavigationContainer } from '@react-navigation/native'
-import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { AuthStackParamList } from './src/navigation/AuthStackParamList'
-import LoginScreen from './src/screens/auth/LoginScreen'
-import RegisterScreen from './src/screens/auth/RegisterScreen'
-import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen'
-import { HomeScreen } from './src/screens/HomeScreen'
-import { HomeStackParamList } from './src/navigation/HomeStackParamList'
-import VerifyOTPScreen from './src/screens/auth/VerifyOTPScreen'
-import ChangePasswordScreen from './src/screens/auth/ChangePasswordScreen'
-// import { BottomTabNavigator } from './src/navigation/BottomTabNavigator'
+/**
+ * Main App Component
+ * Root component with navigation and authentication context
+ */
 
-const Stack = createNativeStackNavigator<AuthStackParamList>()
+import React from 'react';
+import { StatusBar, useColorScheme, ActivityIndicator, View, StyleSheet } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider, useAuthContext } from './src/contexts/AuthContext';
+import { AuthNavigator } from './src/navigation/AuthNavigator';
+import { MainNavigator } from './src/navigation/MainNavigator';
+import { colors } from './src/theme';
 
-const App = () => {
-  const isDarkMode = useColorScheme() === 'dark'
+/**
+ * Navigation Router
+ * Determines which navigator to show based on authentication state
+ */
+const NavigationRouter: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuthContext();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  return isAuthenticated ? <MainNavigator /> : <AuthNavigator />;
+};
+
+/**
+ * App Component
+ */
+const App: React.FC = () => {
+  const isDarkMode = useColorScheme() === 'dark';
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-          <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
-          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-          <Stack.Screen name="Home" component={HomeScreen} />
-        </Stack.Navigator>
-
-        {/*
-        👉 Sau này login xong thì đổi sang:
-        <BottomTabNavigator />
-        */}
-      </NavigationContainer>
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background.primary}
+      />
+      <AuthProvider>
+        <NavigationContainer>
+          <NavigationRouter />
+        </NavigationContainer>
+      </AuthProvider>
     </SafeAreaProvider>
-  )
-}
+  );
+};
 
-export default App
+export default App;
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background.primary,
+  },
+});
