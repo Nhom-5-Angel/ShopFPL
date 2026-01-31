@@ -58,6 +58,20 @@ export const API_ENDPOINTS = {
     USER_DETAIL: (id: string) => `/admin/users/${id}`,
     USER_ROLE: (id: string) => `/admin/users/${id}/role`,
     USER_RESET_PASSWORD: (id: string) => `/admin/users/${id}/reset-password`,
+    PRODUCTS: {
+      LIST: '/admin/products',
+      DETAIL: (id: string) => `/admin/products/${id}`,
+      CREATE: '/admin/products',
+      UPDATE: (id: string) => `/admin/products/${id}`,
+      DELETE: (id: string) => `/admin/products/${id}`,
+    },
+    CATEGORIES: {
+      LIST: '/admin/categories',
+      DETAIL: (id: string) => `/admin/categories/${id}`,
+      CREATE: '/admin/categories',
+      UPDATE: (id: string) => `/admin/categories/${id}`,
+      DELETE: (id: string) => `/admin/categories/${id}`,
+    },
   },
 } as const;
 

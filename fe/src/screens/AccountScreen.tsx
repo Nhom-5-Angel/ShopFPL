@@ -273,14 +273,32 @@ export const AccountScreen: React.FC = () => {
             </TouchableOpacity>
 
             {user?.role === 'admin' && (
-              <TouchableOpacity
-                style={styles.actionItem}
-                onPress={() => navigation.navigate('AdminUsers')}
-              >
-                <Ionicons name="settings-outline" size={24} color={colors.primary} />
-                <Text style={styles.actionText}>Quản lý người dùng</Text>
-                <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity
+                  style={styles.actionItem}
+                  onPress={() => navigation.navigate('AdminUsers')}
+                >
+                  <Ionicons name="people-outline" size={24} color={colors.primary} />
+                  <Text style={styles.actionText}>Quản lý người dùng</Text>
+                  <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionItem}
+                  onPress={() => navigation.navigate('AdminProducts')}
+                >
+                  <Ionicons name="cube-outline" size={24} color={colors.primary} />
+                  <Text style={styles.actionText}>Quản lý sản phẩm</Text>
+                  <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionItem}
+                  onPress={() => navigation.navigate('AdminCategories')}
+                >
+                  <Ionicons name="folder-outline" size={24} color={colors.primary} />
+                  <Text style={styles.actionText}>Quản lý danh mục</Text>
+                  <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
+                </TouchableOpacity>
+              </>
             )}
 
             <TouchableOpacity style={styles.actionItem} onPress={handleLogout}>

@@ -28,6 +28,8 @@ export type MainStackParamList = {
   Cart: undefined;
   Account: undefined;
   AdminUsers: undefined;
+  AdminProducts: undefined;
+  AdminCategories: undefined;
 };
 
 // Root Navigator
