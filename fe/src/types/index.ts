@@ -30,7 +30,8 @@ export interface ProductImage {
 }
 
 export interface Product {
-  id: string;
+  _id?: string; // MongoDB _id
+  id: string; // Alias for _id or explicit id
   name: string;
   description?: string;
   price: number;

@@ -9,6 +9,9 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainStackParamList } from '../navigation/types';
 import { apiService } from '../services/api';
 import { Product, Category } from '../types';
 import { SearchBar } from '../components/SearchBar';
@@ -16,6 +19,8 @@ import { PromotionalBanner } from '../components/PromotionalBanner';
 import { CategoryCard } from '../components/CategoryCard';
 import { ProductCard } from '../components/ProductCard';
 import { FlashSaleTimer } from '../components/FlashSaleTimer';
+
+type HomeNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 const { width } = Dimensions.get('window');
 
@@ -28,6 +33,7 @@ const categories = [
 ];
 
 export const HomeScreen: React.FC = () => {
+  const navigation = useNavigation<HomeNavigationProp>();
   const [products, setProducts] = useState<Product[]>([]);
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +52,11 @@ export const HomeScreen: React.FC = () => {
       console.error('Error loading products:', error);
       setLoading(false);
     }
+  };
+
+  const handleProductPress = (product: Product) => {
+    const productId = product._id || product.id;
+    navigation.navigate('ProductDetail', { productId });
   };
 
   return (
@@ -128,9 +139,13 @@ export const HomeScreen: React.FC = () => {
             data={flashSaleProducts}
             horizontal
             showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item._id || item.id}
             renderItem={({ item }) => (
-              <ProductCard product={item} discount={50} />
+              <ProductCard 
+                product={item} 
+                discount={50}
+                onPress={() => handleProductPress(item)}
+              />
             )}
             contentContainerStyle={styles.productsList}
           />
@@ -148,8 +163,13 @@ export const HomeScreen: React.FC = () => {
             data={products.slice(0, 6)}
             horizontal
             showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <ProductCard product={item} />}
+            keyExtractor={(item) => item._id || item.id}
+            renderItem={({ item }) => (
+              <ProductCard 
+                product={item}
+                onPress={() => handleProductPress(item)}
+              />
+            )}
             contentContainerStyle={styles.productsList}
           />
         </View>
@@ -165,8 +185,11 @@ export const HomeScreen: React.FC = () => {
             </View>
             <View style={styles.productsGrid}>
               {products.slice(0, 4).map((item) => (
-                <View key={item.id} style={styles.gridItem}>
-                  <ProductCard product={item} />
+                <View key={item._id || item.id} style={styles.gridItem}>
+                  <ProductCard 
+                    product={item}
+                    onPress={() => handleProductPress(item)}
+                  />
                 </View>
               ))}
             </View>
