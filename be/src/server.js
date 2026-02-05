@@ -10,6 +10,7 @@ import adminRoute from './routes/adminRoute.js';
 import productRoute from './routes/productRoute.js';
 import categoryRoute from './routes/categoryRoute.js';
 import cartRoute from './routes/cartRoute.js';
+import orderRoute from './routes/orderRoute.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,6 +36,7 @@ app.use('/api/admin', adminRoute);
 app.use('/api/products', productRoute);
 app.use('/api/categories', categoryRoute);
 app.use('/api/cart', cartRoute);
+app.use('/api/orders', orderRoute);
 
 // Health check
 app.get('/health', (req, res) => {

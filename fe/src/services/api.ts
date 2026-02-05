@@ -154,21 +154,42 @@ class ApiService {
   }
 
   // Orders
-  async createOrder(): Promise<Order> {
+  async createOrder(shippingAddress: any, paymentMethod: string = 'cod', notes?: string): Promise<Order> {
     const response = await this.request<{ success: boolean; data: Order }>(API_ENDPOINTS.ORDERS.CREATE, {
       method: 'POST',
+      body: JSON.stringify({ shippingAddress, paymentMethod, notes }),
     });
     return response.data;
   }
 
-  async getOrders(): Promise<Order[]> {
-    const response = await this.request<{ success: boolean; data: Order[] }>(API_ENDPOINTS.ORDERS.LIST);
+  async getOrders(status?: string, paymentStatus?: string): Promise<Order[]> {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (paymentStatus) params.append('paymentStatus', paymentStatus);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const response = await this.request<{ success: boolean; data: Order[] }>(`${API_ENDPOINTS.ORDERS.LIST}${query}`);
     return response.data || [];
+  }
+
+  async getOrderById(orderId: string): Promise<Order> {
+    const response = await this.request<{ success: boolean; data: Order }>(API_ENDPOINTS.ORDERS.DETAIL(orderId));
+    return response.data;
+  }
+
+  async updateOrderStatus(orderId: string, status?: string, paymentStatus?: string): Promise<Order> {
+    const response = await this.request<{ success: boolean; data: Order }>(
+      API_ENDPOINTS.ORDERS.UPDATE_STATUS(orderId),
+      {
+        method: 'PUT',
+        body: JSON.stringify({ status, paymentStatus }),
+      }
+    );
+    return response.data;
   }
 
   async cancelOrder(id: string): Promise<Order> {
     const response = await this.request<{ success: boolean; data: Order }>(API_ENDPOINTS.ORDERS.CANCEL(id), {
-      method: 'POST',
+      method: 'PUT',
     });
     return response.data;
   }

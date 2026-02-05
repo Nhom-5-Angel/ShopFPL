@@ -265,6 +265,15 @@ export const AccountScreen: React.FC = () => {
           <View style={styles.actionsSection}>
             <TouchableOpacity
               style={styles.actionItem}
+              onPress={() => navigation.navigate('Orders')}
+            >
+              <Ionicons name="receipt-outline" size={24} color={colors.primary} />
+              <Text style={styles.actionText}>Đơn hàng của tôi</Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionItem}
               onPress={() => setShowPasswordModal(true)}
             >
               <Ionicons name="lock-closed-outline" size={24} color={colors.primary} />

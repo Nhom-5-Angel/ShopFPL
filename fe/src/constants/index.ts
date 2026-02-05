@@ -45,6 +45,8 @@ export const API_ENDPOINTS = {
   ORDERS: {
     LIST: '/orders',
     CREATE: '/orders',
+    DETAIL: (id: string) => `/orders/${id}`,
+    UPDATE_STATUS: (id: string) => `/orders/${id}/status`,
     CANCEL: (id: string) => `/orders/${id}/cancel`,
   },
   // User

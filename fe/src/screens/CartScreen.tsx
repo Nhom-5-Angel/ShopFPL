@@ -259,7 +259,11 @@ export const CartScreen: React.FC = () => {
             <Button
               title="Thanh toán"
               onPress={() => {
-                Alert.alert('Thông báo', 'Tính năng thanh toán đang phát triển');
+                if (cartItems.length === 0) {
+                  Alert.alert('Thông báo', 'Giỏ hàng trống');
+                  return;
+                }
+                navigation.navigate('Checkout');
               }}
               variant="primary"
               fullWidth

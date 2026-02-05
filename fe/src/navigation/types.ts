@@ -26,6 +26,11 @@ export type MainStackParamList = {
   };
   Search: undefined;
   Cart: undefined;
+  Checkout: undefined;
+  Orders: undefined;
+  OrderDetail: {
+    orderId: string;
+  };
   Account: undefined;
   AdminUsers: undefined;
   AdminProducts: undefined;

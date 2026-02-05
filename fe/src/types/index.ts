@@ -52,16 +52,32 @@ export interface CartItem {
 }
 
 export interface OrderItem {
-  productId: string;
+  productId: string | Product;
   quantity: number;
   price: number;
+  discount?: number;
+}
+
+export interface ShippingAddress {
+  fullName: string;
+  phone: string;
+  address: string;
+  city?: string;
+  district?: string;
+  ward?: string;
 }
 
 export interface Order {
-  id: string;
+  _id?: string;
+  id?: string; // Alias for _id
   userId: string;
   items: OrderItem[];
   total: number;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  createdAt: string;
+  status: 'pending' | 'confirmed' | 'paid' | 'shipping' | 'delivered' | 'cancelled';
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentMethod: 'cod' | 'bank_transfer' | 'credit_card' | 'e_wallet';
+  shippingAddress: ShippingAddress;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
