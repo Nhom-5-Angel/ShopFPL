@@ -97,6 +97,8 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            // Cấu hình debug server host cho emulator
+            resValue "string", "react_native_dev_server_host", "10.0.2.2"
         }
         release {
             // Caution! In production, you need to generate your own keystore file.

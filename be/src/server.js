@@ -9,6 +9,7 @@ import userRoute from './routes/userRoute.js';
 import adminRoute from './routes/adminRoute.js';
 import productRoute from './routes/productRoute.js';
 import categoryRoute from './routes/categoryRoute.js';
+import cartRoute from './routes/cartRoute.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,6 +34,7 @@ app.use('/api/users', userRoute);
 app.use('/api/admin', adminRoute);
 app.use('/api/products', productRoute);
 app.use('/api/categories', categoryRoute);
+app.use('/api/cart', cartRoute);
 
 // Health check
 app.get('/health', (req, res) => {

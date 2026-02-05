@@ -57,9 +57,17 @@ export const ProductDetailScreen: React.FC = () => {
     }
   };
 
-  const handleAddToCart = () => {
-    // TODO: Implement add to cart functionality
-    Alert.alert('Thành công', 'Đã thêm vào giỏ hàng');
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    try {
+      const productId = product._id || product.id;
+      await apiService.addToCart(productId, quantity);
+      Alert.alert('Thành công', 'Đã thêm vào giỏ hàng');
+    } catch (error: any) {
+      console.error('Error adding to cart:', error);
+      Alert.alert('Lỗi', error.message || 'Không thể thêm vào giỏ hàng');
+    }
   };
 
   const handleBuyNow = () => {

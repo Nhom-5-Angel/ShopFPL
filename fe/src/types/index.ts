@@ -46,8 +46,9 @@ export interface Product {
 }
 
 export interface CartItem {
-  productId: string;
+  productId: string | Product; // Có thể là string hoặc Product object (khi populate)
   quantity: number;
+  _id?: string;
 }
 
 export interface OrderItem {

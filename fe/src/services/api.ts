@@ -135,6 +135,17 @@ class ApiService {
     return response.data || [];
   }
 
+  async updateCartItem(productId: string, quantity: number): Promise<CartItem[]> {
+    const response = await this.request<{ success: boolean; data: CartItem[] }>(
+      `/cart/items/${productId}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({ quantity }),
+      }
+    );
+    return response.data || [];
+  }
+
   async removeFromCart(productId: string): Promise<CartItem[]> {
     const response = await this.request<{ success: boolean; data: CartItem[] }>(API_ENDPOINTS.CART.DELETE_ITEM(productId), {
       method: 'DELETE',
