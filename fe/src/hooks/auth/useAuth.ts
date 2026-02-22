@@ -29,6 +29,7 @@ import {
 import { handleApiError } from '../../services/api/errorHandler';
 import { SUCCESS_MESSAGES } from '../../constants';
 import { User } from '../../types';
+import { tokenStorage } from '../../utils';
 
 export const useAuth = () => {
   const { login: loginContext } = useAuthContext();
@@ -90,24 +91,18 @@ export const useAuth = () => {
         password: data.password,
       };
 
+      console.log('[Auth] Register payload', payload);
       const response = await register(payload);
+      console.log('[Auth] Register response', response);
 
       if (response.success && response.data) {
-        // Save user data and token
-        const userData: User = {
-          _id: response.data.user.id,
-          id: response.data.user.id,
-          username: response.data.user.username,
-          email: response.data.user.email,
-          phoneNumber: response.data.user.phoneNumber,
-          role: 'user',
-        };
-        await loginContext(userData, response.data.accessToken);
-
+        // Đăng ký thành công: chỉ thông báo và điều hướng về màn Đăng nhập,
+        // KHÔNG tự đăng nhập để tránh nhảy thẳng vào màn Home gây khó hiểu.
         Alert.alert('Thành công', SUCCESS_MESSAGES.REGISTER_SUCCESS);
         onSuccess?.();
       }
     } catch (error) {
+      console.error('[Auth] Register error', error);
       const errorMessage = handleApiError(error);
       Alert.alert('Thất bại', errorMessage);
     } finally {
@@ -140,7 +135,7 @@ export const useAuth = () => {
       const response = await login(data);
 
       if (response.success && response.data) {
-        // Save user data and token
+        // Save user data and access token
         const userData: User = {
           _id: response.data.user.id,
           id: response.data.user.id,
@@ -150,6 +145,11 @@ export const useAuth = () => {
           role: 'user',
         };
         await loginContext(userData, response.data.accessToken);
+
+        // Lưu refresh token để phục vụ tự động refresh khi accessToken hết hạn
+        if (response.data.refreshToken) {
+          await tokenStorage.setRefreshToken(response.data.refreshToken);
+        }
 
         Alert.alert('Thành công', SUCCESS_MESSAGES.LOGIN_SUCCESS);
         onSuccess?.();

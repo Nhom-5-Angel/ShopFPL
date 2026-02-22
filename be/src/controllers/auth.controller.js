@@ -38,15 +38,44 @@ export const signUp = async (req, res) => {
         const hashPassword = await bcrypt.hash(password, 10)
 
         // Tạo người dùng mới trong cơ sở dữ liệu
-        await User.create({
+        const newUser = await User.create({
             username,
             password: hashPassword,
             email,
             phoneNumber
         })
 
-        // Trả về thông báo thành công
-        return res.status(201).json({ message: "Đăng ký thành công" });
+        // Tạo token truy cập và refresh token giống với đăng nhập
+        const accessToken = jwt.sign(
+            { userId: newUser._id },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: '15m' }
+        )
+
+        const refreshToken = jwt.sign(
+            { userId: newUser._id },
+            process.env.REFRESH_TOKEN_SECRET,
+            { expiresIn: '7d' }
+        )
+
+        newUser.refreshToken = refreshToken
+        await newUser.save()
+
+        // Trả về response theo đúng format ApiResponse<AuthResponse>
+        return res.status(201).json({
+            success: true,
+            data: {
+                user: {
+                    id: newUser._id,
+                    email: newUser.email,
+                    username: newUser.username,
+                    phoneNumber: newUser.phoneNumber
+                },
+                accessToken,
+                refreshToken
+            },
+            message: "Đăng ký thành công"
+        });
 
     } catch (error) {
         // Xử lý lỗi
@@ -80,18 +109,38 @@ export const signIn = async (req, res) => {
             return res.status(401).json({ message: "email hoặc password không chính xác" })
         }
 
-        const accessToken = jwt.sign({ userId: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' })
+        const accessToken = jwt.sign(
+            { userId: user._id },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: '15m' }
+        )
 
-        const refreshToken = jwt.sign({ userId: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '7d' })
+        const refreshToken = jwt.sign(
+            { userId: user._id },
+            process.env.REFRESH_TOKEN_SECRET,
+            { expiresIn: '7d' }
+        )
 
         user.refreshToken = refreshToken
 
         await user.save()
 
         return res.status(200).json({
-            message: "Đăng nhập thành công",
+            success: true,
+            data: {
+                user: {
+                    id: user._id,
+                    email: user.email,
+                    username: user.username,
+                    phoneNumber: user.phoneNumber
+                },
+                accessToken,
+                refreshToken
+            },
+            // Giữ thêm accessToken, refreshToken ở top-level cho trang admin cũ
             accessToken,
-            refreshToken
+            refreshToken,
+            message: "Đăng nhập thành công"
         })
     } catch (error) {
         console.error("SignIn error:", error.message);
@@ -122,11 +171,12 @@ export const refreshToken = async (req, res) => {
 
                 const newAccessToken = jwt.sign(
                     { userId: user._id },
-                    process.env.REFRESH_TOKEN_SECRET,
-                    { expiresIn: '7d' }
+                    process.env.ACCESS_TOKEN_SECRET,
+                    { expiresIn: '15m' }
                 )
 
                 return res.status(200).json({
+                    success: true,
                     accessToken: newAccessToken
                 })
             }
@@ -171,7 +221,7 @@ export const forgotPassword = async (req, res) => {
             `,
         })
 
-        return res.status(200).json({ message: 'Đã gửi mã xác nhận qua email' })
+        return res.status(200).json({ success: true, message: 'Đã gửi mã xác nhận qua email' })
     } catch (error) {
         console.error('Forgot password error:', error.message)
         return res.status(500).json({ message: 'Lỗi hệ thống' })
@@ -208,6 +258,7 @@ export const verifyOtp = async (req, res) => {
         })
 
         return res.status(200).json({
+            success: true,
             message: 'Xác thực OTP thành công'
         })
     } catch (error) {
@@ -241,7 +292,7 @@ export const resetPassword = async (req, res) => {
 
         otpStore.delete(email)
 
-        return res.status(200).json({ message: 'Đổi mật khẩu thành công' })
+        return res.status(200).json({ success: true, message: 'Đổi mật khẩu thành công' })
     } catch (error) {
         console.error('Reset password error:', error.message)
         console.log('OTP STORE:', otpStore)

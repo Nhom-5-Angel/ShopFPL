@@ -1,5 +1,6 @@
 import { API_CONFIG, API_ENDPOINTS } from '../constants';
 import { Product, Category, User, CartItem, Order } from '../types';
+import { tokenStorage } from '../utils';
 
 // Simple API client using fetch
 class ApiService {
@@ -23,7 +24,7 @@ class ApiService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const headers: HeadersInit = {
+    let headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
@@ -38,10 +39,27 @@ class ApiService {
       headers['x-user-id'] = this.userId;
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    let response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers,
     });
+
+    // Nếu access token hết hạn, thử refresh một lần rồi retry
+    if (response.status === 401) {
+      const newToken = await this.refreshAccessToken();
+
+      if (newToken) {
+        headers = {
+          ...headers,
+          Authorization: `Bearer ${newToken}`,
+        };
+
+        response = await fetch(`${this.baseUrl}${endpoint}`, {
+          ...options,
+          headers,
+        });
+      }
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Request failed' }));
@@ -56,11 +74,45 @@ class ApiService {
     return response.json();
   }
 
+  /**
+   * Refresh access token using refresh token stored in storage
+   */
+  private async refreshAccessToken(): Promise<string | null> {
+    try {
+      const refreshToken = await tokenStorage.getRefreshToken();
+      if (!refreshToken) return null;
+
+      const response = await fetch(`${this.baseUrl}${API_ENDPOINTS.AUTH.REFRESH_TOKEN}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) return null;
+
+      const data = await response.json().catch(() => null);
+      if (!data || !data.accessToken) return null;
+
+      // Lưu accessToken mới cho cả tokenStorage và AsyncStorage raw key
+      await tokenStorage.setAccessToken(data.accessToken);
+      try {
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        await AsyncStorage.setItem('accessToken', data.accessToken);
+      } catch {
+        // ignore
+      }
+
+      return data.accessToken as string;
+    } catch {
+      return null;
+    }
+  }
+
   private async getToken(): Promise<string | null> {
     try {
-      // Try to get token from AsyncStorage
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      return await AsyncStorage.getItem('accessToken');
+      return await tokenStorage.getAccessToken();
     } catch {
       return null;
     }

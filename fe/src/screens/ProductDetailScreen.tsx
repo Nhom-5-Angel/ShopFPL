@@ -61,7 +61,12 @@ export const ProductDetailScreen: React.FC = () => {
     if (!product) return;
 
     try {
-      const productId = product._id || product.id;
+      // Luôn gửi productId dạng string (MongoDB ObjectId) để backend lưu đúng, tránh vài sản phẩm không hiện trong giỏ
+      const productId = String(product._id ?? product.id ?? '');
+      if (!productId) {
+        Alert.alert('Lỗi', 'Không xác định được sản phẩm');
+        return;
+      }
       await apiService.addToCart(productId, quantity);
       Alert.alert('Thành công', 'Đã thêm vào giỏ hàng');
     } catch (error: any) {

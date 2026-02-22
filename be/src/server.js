@@ -45,11 +45,12 @@ app.get('/health', (req, res) => {
 
 // Serve admin web static files
 const adminPath = path.join(__dirname, '../public/admin');
-app.use('/admin', express.static(adminPath));
+// Cấu hình để /admin hoặc /admin/ tự load login.html
+app.use('/admin', express.static(adminPath, { index: 'login.html' }));
 
-// Root redirect to admin login
+// Root redirect to admin
 app.get('/', (req, res) => {
-    res.redirect('/admin/login.html');
+    res.redirect('/admin');
 });
 
 connectDB().then(() => {

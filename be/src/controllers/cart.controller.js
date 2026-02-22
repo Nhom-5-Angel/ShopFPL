@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Cart from '../models/cart.model.js';
 import Product from '../models/product.model.js';
 
@@ -10,7 +11,7 @@ export const getCart = async (req, res) => {
         const userId = req.user._id;
 
         let cart = await Cart.findOne({ userId })
-            .populate('items.productId', 'name price images discount stock')
+            .populate('items.productId', '_id name price images discount stock isActive')
             .select('-__v');
 
         // Nếu chưa có cart, tạo cart mới
@@ -53,17 +54,19 @@ export const getCart = async (req, res) => {
 export const addToCart = async (req, res) => {
     try {
         const userId = req.user._id;
-        const { productId, quantity = 1 } = req.body;
+        let { productId, quantity = 1 } = req.body;
 
-        if (!productId) {
+        if (productId != null) productId = String(productId).trim();
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({
                 success: false,
-                message: "productId là bắt buộc"
+                message: "productId không hợp lệ"
             });
         }
+        const productIdObj = new mongoose.Types.ObjectId(productId);
 
         // Kiểm tra product tồn tại và active
-        const product = await Product.findById(productId);
+        const product = await Product.findById(productIdObj);
         if (!product || !product.isActive) {
             return res.status(404).json({
                 success: false,
@@ -88,9 +91,10 @@ export const addToCart = async (req, res) => {
             });
         }
 
-        // Tìm item trong cart
+        const idStr = productIdObj.toString();
+        // Tìm item trong cart (so sánh chuẩn ObjectId string)
         const existingItemIndex = cart.items.findIndex(
-            item => item.productId.toString() === productId
+            item => item.productId && item.productId.toString() === idStr
         );
 
         if (existingItemIndex >= 0) {
@@ -107,17 +111,17 @@ export const addToCart = async (req, res) => {
 
             cart.items[existingItemIndex].quantity = newQuantity;
         } else {
-            // Thêm item mới
+            // Thêm item mới (luôn lưu ObjectId để populate đúng)
             cart.items.push({
-                productId,
+                productId: productIdObj,
                 quantity,
             });
         }
 
         await cart.save();
 
-        // Populate và trả về
-        await cart.populate('items.productId', 'name price images discount stock');
+        // Populate và trả về (có _id để FE hiển thị đúng)
+        await cart.populate('items.productId', '_id name price images discount stock isActive');
         
         return res.status(200).json({
             success: true,

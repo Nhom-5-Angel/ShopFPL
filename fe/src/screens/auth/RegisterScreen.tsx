@@ -76,6 +76,7 @@ const RegisterScreen: React.FC = () => {
       return;
     }
 
+    console.log('[RegisterScreen] Submit form data', formData);
     handleRegister(
       {
         username: formData.fullName,
