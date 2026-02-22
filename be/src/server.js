@@ -43,6 +43,21 @@ app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// 404 handler cho API routes - phải trả về JSON, không phải HTML
+// Phải đặt SAU tất cả routes nhưng TRƯỚC static files
+app.use((req, res, next) => {
+    // Chỉ handle các request đến /api/* mà không match với route nào
+    if (req.path.startsWith('/api/')) {
+        console.log(`[404 Handler] API route not found: ${req.method} ${req.originalUrl}`);
+        return res.status(404).json({
+            success: false,
+            message: `API endpoint không tồn tại: ${req.method} ${req.originalUrl}`
+        });
+    }
+    // Nếu không phải API route, tiếp tục đến middleware tiếp theo
+    next();
+});
+
 // Serve admin web static files
 const adminPath = path.join(__dirname, '../public/admin');
 // Cấu hình để /admin hoặc /admin/ tự load login.html

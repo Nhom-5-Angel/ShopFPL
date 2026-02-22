@@ -14,7 +14,10 @@ export const authenticateToken = async (req, res, next) => {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
 
+        console.log(`[authenticateToken] ${req.method} ${req.path} - Token present:`, !!token);
+
         if (!token) {
+            console.log(`[authenticateToken] No token provided for ${req.method} ${req.path}`);
             return res.status(401).json({
                 success: false,
                 message: 'Không có token xác thực'
@@ -24,6 +27,7 @@ export const authenticateToken = async (req, res, next) => {
         // Verify token
         jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
             if (err) {
+                console.log(`[authenticateToken] Token verification failed:`, err.message);
                 return res.status(403).json({
                     success: false,
                     message: 'Token không hợp lệ hoặc đã hết hạn'
@@ -51,6 +55,7 @@ export const authenticateToken = async (req, res, next) => {
             // Thêm thông tin user vào request
             req.user = user;
             req.userId = decoded.userId;
+            console.log(`[authenticateToken] Token verified successfully for user:`, user.username, `(${user.role})`);
             next();
         });
 

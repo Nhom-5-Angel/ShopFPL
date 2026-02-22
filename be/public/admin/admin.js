@@ -26,11 +26,19 @@ async function apiRequest(endpoint, options = {}) {
     },
   });
 
-  if (response.status === 401) {
+  if (response.status === 401 || response.status === 403) {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
     window.location.href = '/admin/login.html';
-    throw new Error('Phiên đăng nhập đã hết hạn');
+    throw new Error('Phiên đăng nhập đã hết hạn hoặc không có quyền truy cập');
+  }
+
+  // Check if response is JSON
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    const text = await response.text();
+    console.error('Non-JSON response:', text.substring(0, 200));
+    throw new Error(`Server trả về HTML thay vì JSON. Có thể endpoint không tồn tại hoặc có lỗi authentication. Status: ${response.status}`);
   }
 
   const data = await response.json();

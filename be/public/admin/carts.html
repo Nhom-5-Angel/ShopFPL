@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý giỏ hàng - Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .cart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .cart-user-info {
+            flex: 1;
+        }
+        .cart-user-info h3 {
+            margin: 0 0 5px 0;
+            color: var(--text-primary);
+        }
+        .cart-user-info p {
+            margin: 5px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .cart-items {
+            margin-top: 15px;
+        }
+        .cart-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .cart-item-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .cart-item-info {
+            flex: 1;
+        }
+        .cart-item-info h4 {
+            margin: 0 0 5px 0;
+            color: var(--text-primary);
+        }
+        .cart-item-info p {
+            margin: 5px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .cart-total {
+            text-align: right;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid var(--border-light);
+        }
+        .cart-total strong {
+            font-size: 18px;
+            color: var(--error);
+        }
+        .empty-cart {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-cart-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <div>
+                <h1>Quản lý giỏ hàng khách hàng</h1>
+                <p class="welcome-text">Xin chào, <span id="admin-username"></span></p>
+            </div>
+            <div>
+                <a href="/admin/accounts.html" class="btn btn-secondary" style="margin-right: 10px;">Quản lý tài khoản</a>
+                <a href="/admin/products.html" class="btn btn-secondary" style="margin-right: 10px;">Quản lý sản phẩm</a>
+                <button onclick="handleLogout()" class="logout-button">Đăng xuất</button>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <!-- Filters -->
+            <div class="filters-section">
+                <div class="filter-group">
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="Tìm kiếm theo email, tên người dùng..."
+                        onkeypress="if(event.key==='Enter') handleSearch()"
+                    />
+                    <button onclick="handleSearch()">Tìm kiếm</button>
+                </div>
+            </div>
+
+            <!-- Carts List -->
+            <div id="loading" class="loading">Đang tải...</div>
+            <div id="carts-container" style="display: none;">
+                <!-- Carts will be loaded here -->
+            </div>
+            <div id="empty-message" class="empty-cart" style="display: none;">
+                <div class="empty-cart-icon">🛒</div>
+                <h3>Chưa có giỏ hàng nào</h3>
+                <p>Khách hàng chưa có sản phẩm nào trong giỏ hàng</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+    <script>
+        let users = [];
+        let carts = [];
+        let searchQuery = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('admin_token');
+            const user = localStorage.getItem('admin_user');
+            
+            if (!token || !user) {
+                window.location.href = '/admin/login.html';
+                return;
+            }
+
+            try {
+                const userData = JSON.parse(user);
+                document.getElementById('admin-username').textContent = userData.username;
+            } catch (e) {
+                console.error('Error parsing user data:', e);
+            }
+
+            loadCarts();
+        });
+
+        async function loadCarts() {
+            const loadingDiv = document.getElementById('loading');
+            const container = document.getElementById('carts-container');
+            const emptyMessage = document.getElementById('empty-message');
+            
+            loadingDiv.style.display = 'block';
+            container.style.display = 'none';
+            emptyMessage.style.display = 'none';
+
+            try {
+                const response = await apiRequest('/admin/carts');
+                
+                if (response.success) {
+                    carts = response.data || [];
+                    
+                    // Filter by search query
+                    if (searchQuery) {
+                        const searchLower = searchQuery.toLowerCase();
+                        carts = carts.filter(cart => {
+                            const user = cart.userId;
+                            if (!user) return false;
+                            const matchesEmail = user.email?.toLowerCase().includes(searchLower);
+                            const matchesUsername = user.username?.toLowerCase().includes(searchLower);
+                            return matchesEmail || matchesUsername;
+                        });
+                    }
+
+                    // Filter out empty carts
+                    carts = carts.filter(cart => cart.items && cart.items.length > 0);
+
+                    if (carts.length === 0) {
+                        emptyMessage.style.display = 'block';
+                        container.style.display = 'none';
+                    } else {
+                        displayCarts();
+                        container.style.display = 'block';
+                        emptyMessage.style.display = 'none';
+                    }
+                } else {
+                    alert('Lỗi: ' + (response.message || 'Không thể tải danh sách giỏ hàng'));
+                    emptyMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading carts:', error);
+                alert('Lỗi khi tải danh sách giỏ hàng: ' + (error.message || 'Unknown error'));
+                emptyMessage.style.display = 'block';
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        function displayCarts() {
+            const container = document.getElementById('carts-container');
+            container.innerHTML = '';
+
+            if (carts.length === 0) {
+                container.innerHTML = '<div class="empty-cart"><div class="empty-cart-icon">🛒</div><h3>Chưa có giỏ hàng nào</h3></div>';
+                return;
+            }
+
+                carts.forEach(cart => {
+                const cartCard = document.createElement('div');
+                cartCard.className = 'cart-card';
+                
+                const user = cart.userId || {};
+                const total = calculateCartTotal(cart.items || []);
+
+                let itemsHtml = '';
+                if (cart.items && cart.items.length > 0) {
+                    cart.items.forEach(item => {
+                        const product = item.productId;
+                        const imageUrl = product?.images && product.images.length > 0 ? product.images[0].url : '';
+                        const productName = product?.name || 'Sản phẩm không xác định';
+                        const price = product?.discount && product.discount > 0
+                            ? product.price * (1 - product.discount / 100)
+                            : product?.price || 0;
+                        const itemTotal = price * item.quantity;
+
+                        itemsHtml += `
+                            <div class="cart-item">
+                                ${imageUrl ? `<img src="${imageUrl}" class="cart-item-image" alt="${productName}">` : '<div class="cart-item-image" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">📦</div>'}
+                                <div class="cart-item-info">
+                                    <h4>${productName}</h4>
+                                    <p>Giá: ${price.toLocaleString('vi-VN')}₫</p>
+                                    <p>Số lượng: ${item.quantity}</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <strong style="color: var(--error);">${itemTotal.toLocaleString('vi-VN')}₫</strong>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    itemsHtml = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">Giỏ hàng trống</p>';
+                }
+
+                cartCard.innerHTML = `
+                    <div class="cart-header">
+                        <div class="cart-user-info">
+                            <h3>${user?.username || 'Người dùng không xác định'}</h3>
+                            <p>Email: ${user?.email || 'N/A'}</p>
+                            <p>Số điện thoại: ${user?.phoneNumber || 'N/A'}</p>
+                        </div>
+                        <div class="cart-total">
+                            <p style="margin: 0 0 5px 0; color: var(--text-secondary);">Tổng cộng:</p>
+                            <strong>${total.toLocaleString('vi-VN')}₫</strong>
+                        </div>
+                    </div>
+                    <div class="cart-items">
+                        ${itemsHtml}
+                    </div>
+                `;
+                container.appendChild(cartCard);
+            });
+        }
+
+        function calculateCartTotal(items) {
+            if (!items || items.length === 0) return 0;
+            return items.reduce((total, item) => {
+                const product = item.productId;
+                if (!product) return total;
+                const price = product.discount && product.discount > 0
+                    ? product.price * (1 - product.discount / 100)
+                    : product.price || 0;
+                return total + (price * (item.quantity || 0));
+            }, 0);
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('search-input').value.trim();
+            loadCarts();
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            window.location.href = '/admin/login.html';
+        }
+    </script>
+</body>
+</html>

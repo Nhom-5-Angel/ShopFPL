@@ -69,7 +69,8 @@ export const signUp = async (req, res) => {
                     id: newUser._id,
                     email: newUser.email,
                     username: newUser.username,
-                    phoneNumber: newUser.phoneNumber
+                    phoneNumber: newUser.phoneNumber,
+                    role: newUser.role || 'user'
                 },
                 accessToken,
                 refreshToken
@@ -132,7 +133,8 @@ export const signIn = async (req, res) => {
                     id: user._id,
                     email: user.email,
                     username: user.username,
-                    phoneNumber: user.phoneNumber
+                    phoneNumber: user.phoneNumber,
+                    role: user.role || 'user'
                 },
                 accessToken,
                 refreshToken
