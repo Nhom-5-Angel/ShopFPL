@@ -212,7 +212,7 @@ export const forgotPassword = async (req, res) => {
         })
 
         await transporter.sendMail({
-            from: `"Support" <${process.env.MAIL_USER}>`,
+            from: `"Support" <${process.env.EMAIL_USERNAME}>`,
             to: email,
             subject: 'Mã xác nhận đổi mật khẩu',
             html: `
