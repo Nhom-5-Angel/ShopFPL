@@ -22,7 +22,7 @@ export const createOrder = async (req, res) => {
 
         // Lấy giỏ hàng của user
         const cart = await Cart.findOne({ userId })
-            .populate('items.productId', 'name price discount stock');
+            .populate('items.productId', 'name price discount stock isActive');
 
         if (!cart || !cart.items || cart.items.length === 0) {
             return res.status(400).json({
@@ -38,7 +38,8 @@ export const createOrder = async (req, res) => {
         for (const cartItem of cart.items) {
             const product = cartItem.productId;
             
-            if (!product || !product.isActive) {
+            // Chỉ coi là không hoạt động nếu isActive === false
+            if (!product || product.isActive === false) {
                 return res.status(400).json({
                     success: false,
                     message: `Sản phẩm ${product?.name || 'không xác định'} không còn hoạt động`
